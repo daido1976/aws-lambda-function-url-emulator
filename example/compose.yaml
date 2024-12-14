@@ -1,0 +1,8 @@
+services:
+  # TODO: Make the aws-lambda-function-url-emulator pull when pushed to the container registry.
+  lambda-example:
+    build:
+      context: .
+    container_name: lambda-example
+    ports:
+      - "9000:8080"
