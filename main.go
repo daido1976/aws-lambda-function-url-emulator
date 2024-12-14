@@ -8,14 +8,23 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 )
 
 const (
-	rieEndpoint = "http://localhost:9000/2015-03-31/functions/function/invocations"
-	port        = 8080
+	port = 8080
 )
+
+var rieEndpoint = getEnv("RIE_ENDPOINT", "http://localhost:9000/2015-03-31/functions/function/invocations")
+
+func getEnv(key, fallback string) string {
+	if value, exists := os.LookupEnv(key); exists {
+		return value
+	}
+	return fallback
+}
 
 type RequestContext struct {
 	AccountID    string `json:"accountId"`
