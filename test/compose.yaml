@@ -1,0 +1,15 @@
+services:
+  test-aws-lambda-function-url-emulator:
+    build:
+      context: ../
+    container_name: test-aws-lambda-function-url-emulator
+    ports:
+      - "8080:8080"
+    environment:
+      RIE_ENDPOINT: "http://test-rie:8080/2015-03-31/functions/function/invocations"
+  test-rie:
+    build:
+      context: .
+    container_name: test-rie
+    ports:
+      - "9000:8080"
