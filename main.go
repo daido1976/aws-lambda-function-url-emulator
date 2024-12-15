@@ -1,21 +1,20 @@
 package main
 
 import (
-	"bytes"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
-	"time"
+
+	"github.com/aws/aws-lambda-go/events"
 )
 
-const (
-	port = 8080
-)
+const port = 8080
 
 var rieEndpoint = getEnv("RIE_ENDPOINT", "http://localhost:9000/2015-03-31/functions/function/invocations")
 
@@ -24,44 +23,6 @@ func getEnv(key, fallback string) string {
 		return value
 	}
 	return fallback
-}
-
-type RequestContext struct {
-	AccountID    string `json:"accountId"`
-	APIID        string `json:"apiId"`
-	DomainName   string `json:"domainName"`
-	DomainPrefix string `json:"domainPrefix"`
-	HTTP         struct {
-		Method    string `json:"method"`
-		Path      string `json:"path"`
-		Protocol  string `json:"protocol"`
-		SourceIP  string `json:"sourceIp"`
-		UserAgent string `json:"userAgent"`
-	} `json:"http"`
-	RequestID string `json:"requestId"`
-	RouteKey  string `json:"routeKey"`
-	Stage     string `json:"stage"`
-	Time      string `json:"time"`
-	TimeEpoch int64  `json:"timeEpoch"`
-}
-
-type LambdaEvent struct {
-	Version               string            `json:"version"`
-	RouteKey              string            `json:"routeKey"`
-	RawPath               string            `json:"rawPath"`
-	RawQueryString        string            `json:"rawQueryString"`
-	Headers               map[string]string `json:"headers"`
-	QueryStringParameters map[string]string `json:"queryStringParameters,omitempty"`
-	RequestContext        RequestContext    `json:"requestContext"`
-	Body                  string            `json:"body,omitempty"`
-	IsBase64Encoded       bool              `json:"isBase64Encoded"`
-}
-
-type LambdaResponse struct {
-	StatusCode      int               `json:"statusCode"`
-	Headers         map[string]string `json:"headers"`
-	Body            string            `json:"body"`
-	IsBase64Encoded bool              `json:"isBase64Encoded"`
 }
 
 func main() {
@@ -76,17 +37,15 @@ func main() {
 			return
 		}
 
-		// Forward the event to RIE
+		// Invoke the Lambda function
 		response, err := invokeLambda(lambdaEvent)
 		if err != nil {
 			http.Error(w, "Failed to invoke Lambda: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
-		defer response.Body.Close()
 
 		// Map Lambda response to HTTP response
-		err = mapLambdaResponseToHTTP(w, response)
-		if err != nil {
+		if err := mapLambdaResponseToHTTP(w, response); err != nil {
 			http.Error(w, "Failed to process Lambda response: "+err.Error(), http.StatusInternalServerError)
 		}
 	})
@@ -95,125 +54,87 @@ func main() {
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), nil))
 }
 
-func buildLambdaEvent(r *http.Request) (*LambdaEvent, error) {
-	rawQuery := r.URL.RawQuery
+func buildLambdaEvent(r *http.Request) (*events.APIGatewayV2HTTPRequest, error) {
+	bodyBytes, _ := io.ReadAll(r.Body)
+	body := string(bodyBytes)
 
-	// Query string parameters
-	queryParams := map[string]string{}
-	for key, values := range r.URL.Query() {
-		queryParams[key] = strings.Join(values, ",")
-	}
-
-	// Headers
 	headers := map[string]string{}
 	for key, values := range r.Header {
-		headers[strings.ToLower(key)] = values[0]
+		headers[key] = strings.Join(values, ",")
 	}
 
-	// Body and Base64 encoding
-	var body string
-	var isBase64Encoded bool
-	if r.Body != nil {
-		bodyBytes, err := io.ReadAll(r.Body)
-		if err != nil {
-			return nil, err
-		}
-
-		// Detect if the body needs Base64 encoding
-		contentType := r.Header.Get("Content-Type")
-		if !isTextContent(contentType) {
-			body = base64.StdEncoding.EncodeToString(bodyBytes)
-			isBase64Encoded = true
-		} else {
-			body = string(bodyBytes)
-			isBase64Encoded = false
-		}
-	}
-
-	// Request context
-	now := time.Now().UTC()
-	requestContext := RequestContext{
-		AccountID:    "anonymous",
-		APIID:        "mock-api-id",
-		DomainName:   r.Host,
-		DomainPrefix: "mock-api-id",
-		RequestID:    generateRequestID(),
-		RouteKey:     "$default",
-		Stage:        "$default",
-		Time:         now.Format("2006-01-02T15:04:05.000Z"),
-		TimeEpoch:    now.UnixMilli(),
-	}
-	requestContext.HTTP.Method = r.Method
-	requestContext.HTTP.Path = r.URL.Path
-	requestContext.HTTP.Protocol = r.Proto
-	requestContext.HTTP.SourceIP = r.RemoteAddr
-	requestContext.HTTP.UserAgent = r.UserAgent()
-
-	return &LambdaEvent{
+	return &events.APIGatewayV2HTTPRequest{
 		Version:               "2.0",
-		RouteKey:              "$default",
 		RawPath:               r.URL.Path,
-		RawQueryString:        rawQuery,
+		RawQueryString:        r.URL.RawQuery,
 		Headers:               headers,
-		QueryStringParameters: queryParams,
-		RequestContext:        requestContext,
+		QueryStringParameters: convertQueryParams(r.URL.Query()),
 		Body:                  body,
-		IsBase64Encoded:       isBase64Encoded,
+		IsBase64Encoded:       false,
+		RequestContext: events.APIGatewayV2HTTPRequestContext{
+			HTTP: events.APIGatewayV2HTTPRequestContextHTTPDescription{
+				Method:    r.Method,
+				Path:      r.URL.Path,
+				Protocol:  r.Proto,
+				SourceIP:  r.RemoteAddr,
+				UserAgent: r.UserAgent(),
+			},
+		},
 	}, nil
 }
 
-func invokeLambda(event *LambdaEvent) (*http.Response, error) {
+func convertQueryParams(values url.Values) map[string]string {
+	params := make(map[string]string)
+	for key, value := range values {
+		params[key] = strings.Join(value, ",")
+	}
+	return params
+}
+
+func invokeLambda(event *events.APIGatewayV2HTTPRequest) (*events.APIGatewayV2HTTPResponse, error) {
 	eventData, err := json.Marshal(event)
 	if err != nil {
 		return nil, err
 	}
 
-	req, err := http.NewRequest("POST", rieEndpoint, bytes.NewBuffer(eventData))
+	req, err := http.NewRequest("POST", rieEndpoint, strings.NewReader(string(eventData)))
 	if err != nil {
 		return nil, err
 	}
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
-	return client.Do(req)
+	res, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	var lambdaResponse events.APIGatewayV2HTTPResponse
+	if err := json.NewDecoder(res.Body).Decode(&lambdaResponse); err != nil {
+		return nil, err
+	}
+	return &lambdaResponse, nil
 }
 
-func mapLambdaResponseToHTTP(w http.ResponseWriter, response *http.Response) error {
-	var lambdaResponse LambdaResponse
-	err := json.NewDecoder(response.Body).Decode(&lambdaResponse)
-	if err != nil {
-		return err
-	}
-
-	// Set HTTP status code
+func mapLambdaResponseToHTTP(w http.ResponseWriter, lambdaResponse *events.APIGatewayV2HTTPResponse) error {
+	// Set the status code
 	w.WriteHeader(lambdaResponse.StatusCode)
 
-	// Set HTTP headers
+	// Set headers
 	for key, value := range lambdaResponse.Headers {
 		w.Header().Set(key, value)
 	}
 
-	// Decode the body if Base64 encoded
-	var body string
+	// Handle Base64 encoding
 	if lambdaResponse.IsBase64Encoded {
 		bodyBytes, err := base64.StdEncoding.DecodeString(lambdaResponse.Body)
 		if err != nil {
 			return err
 		}
-		body = string(bodyBytes)
+		w.Write(bodyBytes)
 	} else {
-		body = lambdaResponse.Body
+		w.Write([]byte(lambdaResponse.Body))
 	}
-
-	// Write the body to the response
-	_, err = w.Write([]byte(body))
-	return err
-}
-
-func isTextContent(contentType string) bool {
-	return strings.Contains(contentType, "text") || strings.Contains(contentType, "json") || strings.Contains(contentType, "xml")
-}
-
-func generateRequestID() string {
-	return fmt.Sprintf("req-%s", strings.ReplaceAll(fmt.Sprintf("%x", time.Now().UnixNano()), " ", ""))
+	return nil
 }
