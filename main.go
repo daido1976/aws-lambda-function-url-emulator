@@ -57,6 +57,13 @@ type LambdaEvent struct {
 	IsBase64Encoded       bool              `json:"isBase64Encoded"`
 }
 
+type LambdaResponse struct {
+	StatusCode      int               `json:"statusCode"`
+	Headers         map[string]string `json:"headers"`
+	Body            string            `json:"body"`
+	IsBase64Encoded bool              `json:"isBase64Encoded"`
+}
+
 func main() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		// Log the incoming request
@@ -75,11 +82,13 @@ func main() {
 			http.Error(w, "Failed to invoke Lambda: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
+		defer response.Body.Close()
 
-		// Return the response to the client
-		w.WriteHeader(response.StatusCode)
-		io.Copy(w, response.Body)
-		response.Body.Close()
+		// Map Lambda response to HTTP response
+		err = mapLambdaResponseToHTTP(w, response)
+		if err != nil {
+			http.Error(w, "Failed to process Lambda response: "+err.Error(), http.StatusInternalServerError)
+		}
 	})
 
 	log.Printf("[Lambda URL Proxy] Listening on http://localhost:%d\n", port)
@@ -167,6 +176,38 @@ func invokeLambda(event *LambdaEvent) (*http.Response, error) {
 
 	client := &http.Client{}
 	return client.Do(req)
+}
+
+func mapLambdaResponseToHTTP(w http.ResponseWriter, response *http.Response) error {
+	var lambdaResponse LambdaResponse
+	err := json.NewDecoder(response.Body).Decode(&lambdaResponse)
+	if err != nil {
+		return err
+	}
+
+	// Set HTTP status code
+	w.WriteHeader(lambdaResponse.StatusCode)
+
+	// Set HTTP headers
+	for key, value := range lambdaResponse.Headers {
+		w.Header().Set(key, value)
+	}
+
+	// Decode the body if Base64 encoded
+	var body string
+	if lambdaResponse.IsBase64Encoded {
+		bodyBytes, err := base64.StdEncoding.DecodeString(lambdaResponse.Body)
+		if err != nil {
+			return err
+		}
+		body = string(bodyBytes)
+	} else {
+		body = lambdaResponse.Body
+	}
+
+	// Write the body to the response
+	_, err = w.Write([]byte(body))
+	return err
 }
 
 func isTextContent(contentType string) bool {
