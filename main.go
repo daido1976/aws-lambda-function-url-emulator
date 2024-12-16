@@ -14,8 +14,7 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 )
 
-const port = 8080
-
+var port = getEnv("PORT", "8080")
 var rieEndpoint = getEnv("RIE_ENDPOINT", "http://localhost:9000/2015-03-31/functions/function/invocations")
 
 func getEnv(key, fallback string) string {
@@ -50,8 +49,8 @@ func main() {
 		}
 	})
 
-	log.Printf("[Lambda URL Proxy] Listening on http://localhost:%d\n", port)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), nil))
+	log.Printf("[Lambda URL Proxy] Listening on http://localhost:%s\n", port)
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", port), nil))
 }
 
 func buildLambdaEvent(r *http.Request) (*events.APIGatewayV2HTTPRequest, error) {
