@@ -117,13 +117,15 @@ func invokeLambda(event *events.APIGatewayV2HTTPRequest) (*events.APIGatewayV2HT
 }
 
 func mapLambdaResponseToHTTP(w http.ResponseWriter, lambdaResponse *events.APIGatewayV2HTTPResponse) error {
-	// Set the status code
-	w.WriteHeader(lambdaResponse.StatusCode)
-
 	// Set headers
+	// NOTE: Headers must be set before calling WriteHeader, as changes to headers after this have no effect.
+	// See. https://pkg.go.dev/net/http#ResponseWriter
 	for key, value := range lambdaResponse.Headers {
 		w.Header().Set(key, value)
 	}
+
+	// Set the status code
+	w.WriteHeader(lambdaResponse.StatusCode)
 
 	// Handle Base64 encoding
 	if lambdaResponse.IsBase64Encoded {
