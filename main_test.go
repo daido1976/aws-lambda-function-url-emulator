@@ -37,7 +37,7 @@ func TestHandler(t *testing.T) {
 
 	rieEndpoint = mockRieServer.URL
 
-	server := httptest.NewServer(http.HandlerFunc(mainHandler))
+	server := httptest.NewServer(http.HandlerFunc(handler))
 	defer server.Close()
 
 	req, _ := http.NewRequest("POST", server.URL+"/foo/bar?testkey=testvalue", strings.NewReader("test body"))

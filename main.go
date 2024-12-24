@@ -7,7 +7,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"net/url"
 	"os"
 	"strings"
 
@@ -25,12 +24,12 @@ func getEnv(key, fallback string) string {
 }
 
 func main() {
-	http.HandleFunc("/", mainHandler)
+	http.HandleFunc("/", handler)
 	log.Printf("[Lambda URL Proxy] Listening on http://localhost:%s\n", port)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", port), nil))
 }
 
-func mainHandler(w http.ResponseWriter, r *http.Request) {
+func handler(w http.ResponseWriter, r *http.Request) {
 	// Log the incoming request
 	log.Printf("[Lambda URL Proxy] %s %s\n", r.Method, r.URL.String())
 
@@ -58,17 +57,12 @@ func buildLambdaEvent(r *http.Request) (*events.APIGatewayV2HTTPRequest, error) 
 	bodyBytes, _ := io.ReadAll(r.Body)
 	body := string(bodyBytes)
 
-	headers := map[string]string{}
-	for key, values := range r.Header {
-		headers[key] = strings.Join(values, ",")
-	}
-
 	return &events.APIGatewayV2HTTPRequest{
 		Version:               "2.0",
 		RawPath:               r.URL.Path,
 		RawQueryString:        r.URL.RawQuery,
-		Headers:               headers,
-		QueryStringParameters: convertQueryParams(r.URL.Query()),
+		Headers:               joinValuesWithComma(r.Header),
+		QueryStringParameters: joinValuesWithComma(r.URL.Query()),
 		Body:                  body,
 		IsBase64Encoded:       false,
 		RequestContext: events.APIGatewayV2HTTPRequestContext{
@@ -83,12 +77,12 @@ func buildLambdaEvent(r *http.Request) (*events.APIGatewayV2HTTPRequest, error) 
 	}, nil
 }
 
-func convertQueryParams(values url.Values) map[string]string {
-	params := make(map[string]string)
-	for key, value := range values {
-		params[key] = strings.Join(value, ",")
+func joinValuesWithComma(input map[string][]string) map[string]string {
+	result := map[string]string{}
+	for key, values := range input {
+		result[key] = strings.Join(values, ",")
 	}
-	return params
+	return result
 }
 
 func invokeLambda(event *events.APIGatewayV2HTTPRequest) (*events.APIGatewayV2HTTPResponse, error) {
@@ -97,14 +91,7 @@ func invokeLambda(event *events.APIGatewayV2HTTPRequest) (*events.APIGatewayV2HT
 		return nil, err
 	}
 
-	req, err := http.NewRequest("POST", rieEndpoint, strings.NewReader(string(eventData)))
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Set("Content-Type", "application/json")
-
-	client := &http.Client{}
-	res, err := client.Do(req)
+	res, err := http.Post(rieEndpoint, "application/json", strings.NewReader(string(eventData)))
 	if err != nil {
 		return nil, err
 	}
