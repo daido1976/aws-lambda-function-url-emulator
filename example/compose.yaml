@@ -1,8 +1,15 @@
 services:
-  # TODO: Make the aws-lambda-function-url-emulator pull when pushed to the container registry.
-  lambda-example:
+  lambda-function-url-emulator:
+    image: daido1976/aws-lambda-function-url-emulator
+    container_name: lambda-function-url-emulator
+    ports:
+      - "8080:8080"
+    environment:
+      # Specify the internal port of the lambda container
+      RIE_ENDPOINT: "http://example-lambda-rie:8080/2015-03-31/functions/function/invocations"
+  example-lambda-rie:
     build:
       context: .
-    container_name: lambda-example
+    container_name: example-lambda-rie
     ports:
       - "9000:8080"
