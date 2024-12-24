@@ -25,32 +25,33 @@ func getEnv(key, fallback string) string {
 }
 
 func main() {
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		// Log the incoming request
-		log.Printf("[Lambda URL Proxy] %s %s\n", r.Method, r.URL.String())
-
-		// Build the Lambda event
-		lambdaEvent, err := buildLambdaEvent(r)
-		if err != nil {
-			http.Error(w, "Failed to build Lambda event: "+err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		// Invoke the Lambda function
-		response, err := invokeLambda(lambdaEvent)
-		if err != nil {
-			http.Error(w, "Failed to invoke Lambda: "+err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		// Map Lambda response to HTTP response
-		if err := mapLambdaResponseToHTTP(w, response); err != nil {
-			http.Error(w, "Failed to process Lambda response: "+err.Error(), http.StatusInternalServerError)
-		}
-	})
-
+	http.HandleFunc("/", mainHandler)
 	log.Printf("[Lambda URL Proxy] Listening on http://localhost:%s\n", port)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", port), nil))
+}
+
+func mainHandler(w http.ResponseWriter, r *http.Request) {
+	// Log the incoming request
+	log.Printf("[Lambda URL Proxy] %s %s\n", r.Method, r.URL.String())
+
+	// Build the Lambda event
+	lambdaEvent, err := buildLambdaEvent(r)
+	if err != nil {
+		http.Error(w, "Failed to build Lambda event: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Invoke the Lambda function
+	response, err := invokeLambda(lambdaEvent)
+	if err != nil {
+		http.Error(w, "Failed to invoke Lambda: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Map Lambda response to HTTP response
+	if err := mapLambdaResponseToHTTP(w, response); err != nil {
+		http.Error(w, "Failed to process Lambda response: "+err.Error(), http.StatusInternalServerError)
+	}
 }
 
 func buildLambdaEvent(r *http.Request) (*events.APIGatewayV2HTTPRequest, error) {
