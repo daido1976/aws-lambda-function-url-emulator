@@ -8,33 +8,17 @@ import (
 	"testing"
 )
 
-func TestMainHandler(t *testing.T) {
-	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func TestHandler(t *testing.T) {
+	mockRieServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprintln(w, `{"statusCode": 200, "body": "mock response", "isBase64Encoded": false}`)
 	}))
-	defer mockServer.Close()
+	defer mockRieServer.Close()
 
-	rieEndpoint = mockServer.URL
+	rieEndpoint = mockRieServer.URL
 
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		lambdaEvent, err := buildLambdaEvent(r)
-		if err != nil {
-			http.Error(w, "Failed to build Lambda event: "+err.Error(), http.StatusInternalServerError)
-			return
-		}
-		response, err := invokeLambda(lambdaEvent)
-		if err != nil {
-			http.Error(w, "Failed to invoke Lambda: "+err.Error(), http.StatusInternalServerError)
-			return
-		}
-		if err := mapLambdaResponseToHTTP(w, response); err != nil {
-			http.Error(w, "Failed to process Lambda response: "+err.Error(), http.StatusInternalServerError)
-		}
-	})
-
-	server := httptest.NewServer(handler)
+	server := httptest.NewServer(http.HandlerFunc(mainHandler))
 	defer server.Close()
 
 	req, _ := http.NewRequest("GET", server.URL+"/test?key=value", nil)
