@@ -1,16 +1,13 @@
-export const handler = async (event) => {
-  console.log("Lambda received event:", event);
-
-  const response = {
+export const handler = async (event, context) => {
+  return {
     statusCode: 200,
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
       message: "Hello from Lambda!",
-      input: event,
+      event,
+      context,
     }),
   };
-
-  return response;
 };
