@@ -1,5 +1,5 @@
 # See. https://docs.docker.com/build/ci/github-actions/multi-platform/
-name: Build and Push Docker Image
+name: Publish Docker Image
 
 on:
   workflow_dispatch:
