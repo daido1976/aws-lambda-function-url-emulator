@@ -26,19 +26,12 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Prepare tags
-        id: prepare_tags
-        run: |
-          if [ -z "${{ github.event.inputs.version }}" ]; then
-            echo "TAGS=latest" >> $GITHUB_ENV
-          else
-            echo "TAGS=latest,${{ github.event.inputs.version }}" >> $GITHUB_ENV
-          fi
-
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v6
         with:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: daido1976/aws-lambda-function-url-emulator:${{ steps.prepare_tags.outputs.TAGS }}
+          tags: |
+            daido1976/aws-lambda-function-url-emulator:latest
+            ${{ github.event.inputs.version && 'daido1976/aws-lambda-function-url-emulator:${{ github.event.inputs.version }}' }}
