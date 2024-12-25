@@ -1,3 +1,5 @@
+Example of using the `aws-lambda-function-url-emulator` and RIE with Docker Compose.
+
 ```sh
 $ docker compose up -d
 $ curl 'http://localhost:8080/foo/bar?testkey=testvalue'
