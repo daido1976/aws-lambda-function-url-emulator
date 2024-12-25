@@ -1,3 +1,4 @@
+// @ts-check
 import { expect, test } from "vitest";
 
 const TEST_ENDPOINT = "http://localhost:8080/foo/bar";
@@ -125,4 +126,16 @@ test("E2E Test for POST Request", async () => {
 
   // Validate the response against the expected structure for POST
   expect(responseData).toMatchObject(expected);
+});
+
+test("E2E Test for Base64 Encoded Response (Binary)", async () => {
+  const response = await fetch(`${TEST_ENDPOINT}?binary=true`);
+  const responseData = await response.arrayBuffer();
+
+  // Verify binary data after decoding
+  const expectedBinary = Buffer.from("This is a test binary data", "utf-8");
+  expect(Buffer.from(responseData)).toEqual(expectedBinary);
+
+  // Verify the response headers
+  expect(response.headers.get("Content-Type")).toBe("application/octet-stream");
 });
