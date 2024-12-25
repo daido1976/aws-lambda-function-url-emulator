@@ -1,15 +1,16 @@
 {
-  "name": "aws-lambda-function-url-emulator-test",
+  "name": "test",
   "version": "1.0.0",
-  "main": "index.mjs",
+  "description": "",
+  "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "vitest run"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
+  "type": "commonjs",
   "devDependencies": {
-    "@types/aws-lambda": "^8.10.146"
+    "vitest": "^2.1.8"
   }
 }

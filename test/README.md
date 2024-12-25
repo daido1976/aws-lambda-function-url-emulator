@@ -1,5 +1,5 @@
 ```sh
-# required hurl
+# required Node.js
 $ docker compose up -d
-$ hurl --test test.hurl
+$ npm run test
 ```
