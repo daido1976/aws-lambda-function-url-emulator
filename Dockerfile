@@ -1,26 +1,17 @@
-# Stage 1: Build
+# See. https://github.com/GoogleContainerTools/distroless/blob/530158861eebdbbf149f7e7e67bfe45eb433a35c/examples/go/Dockerfile
 FROM golang:1.23 AS builder
 
-# Set the working directory
 WORKDIR /app
-
-# Copy the source code
 COPY . .
 
 # Build the Go application with static linking
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o main .
+RUN CGO_ENABLED=0 go build -o main .
 
-# Stage 2: Runtime
-FROM alpine:latest
+FROM gcr.io/distroless/static-debian12
 
-# Set the working directory
 WORKDIR /app
-
-# Copy the built binary from the builder stage
 COPY --from=builder /app/main .
 
-# Expose the application port
 EXPOSE 8080
 
-# Command to run the application
 CMD ["./main"]
