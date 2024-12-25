@@ -1,5 +1,6 @@
 # See. https://docs.docker.com/build/ci/github-actions/multi-platform/
 name: Publish Docker Image
+run-name: "${{ github.workflow }} (version: ${{ inputs.version || 'latest only' }})"
 
 on:
   workflow_dispatch:
@@ -26,12 +27,19 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Prepare tags
+        id: prepare_tags
+        run: |
+          if [ -z "${{ inputs.version }}" ]; then
+            echo "TAGS=daido1976/aws-lambda-function-url-emulator:latest" >> $GITHUB_ENV
+          else
+            echo "TAGS=daido1976/aws-lambda-function-url-emulator:latest,daido1976/aws-lambda-function-url-emulator:${{ inputs.version }}" >> $GITHUB_ENV
+          fi
+
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v6
         with:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: |
-            daido1976/aws-lambda-function-url-emulator:latest
-            ${{ github.event.inputs.version && 'daido1976/aws-lambda-function-url-emulator:${{ github.event.inputs.version }}' }}
+          tags: ${{ env.TAGS }}
