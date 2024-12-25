@@ -2,16 +2,12 @@
 
 This repository provides a lightweight Docker image to emulate **AWS Lambda Function URLs** locally. It uses **AWS Lambda Runtime Interface Emulator (RIE)** to replicate the behavior of Function URLs for local development and testing.
 
----
-
 ## Features
 
 - Emulates **AWS Lambda Function URLs** locally.
 - Automatically forwards HTTP requests to a locally running Lambda function using the AWS Lambda Runtime Interface Emulator.
 - Supports `APIGatewayProxyEventV2` for HTTP API requests.
 - Handles `isBase64Encoded` for binary data.
-
----
 
 ## Getting Started
 
@@ -31,46 +27,15 @@ docker run --rm -p 8080:8080 \
 
 The emulator will be available at `http://localhost:8080`.
 
----
+### Use Docker Compose to work with RIE
 
-## Usage
-
-1. **Start the Emulator**
-
-   Run the Docker container as described above.
-
-2. **Start a Local Lambda Function with RIE**
-
-   Use **AWS Lambda Runtime Interface Emulator (RIE)** to run your Lambda function locally. Example:
-
-   ```bash
-   docker run --rm -v $(pwd):/var/task \
-     -p 9000:8080 \
-     amazon/aws-lambda-nodejs:20 \
-     node index.js
-   ```
-
-   Replace `node index.js` with your Lambda handler code.
-
-3. **Send a Request to the Emulator**
-
-   Use `curl`, Postman, or any HTTP client to test your Lambda function through the emulator.
-
-   Example:
-
-   ```bash
-   curl http://localhost:8080/?key=example-file.txt
-   ```
-
----
+For a practical example of integrating this emulator with RIE using Docker Compose, refer to the [example](./example/) directory.
 
 ## Environment Variables
 
 | Variable       | Description                                         | Default Value                                                     |
 | -------------- | --------------------------------------------------- | ----------------------------------------------------------------- |
 | `RIE_ENDPOINT` | URL for the Lambda Runtime Interface Emulator (RIE) | `http://localhost:8080/2015-03-31/functions/function/invocations` |
-
----
 
 ## Build the Docker Image Locally
 
@@ -79,8 +44,6 @@ If you want to build the Docker image yourself:
 ```bash
 docker build -t aws-lambda-function-url-emulator .
 ```
-
----
 
 ## License
 
