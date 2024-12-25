@@ -14,7 +14,7 @@ import (
 )
 
 var port = getEnv("PORT", "8080")
-var rieEndpoint = getEnv("RIE_ENDPOINT", "http://localhost:9000/2015-03-31/functions/function/invocations")
+var rieEndpoint = getEnv("RIE_ENDPOINT", "http://localhost:8080/2015-03-31/functions/function/invocations")
 
 func getEnv(key, fallback string) string {
 	if value, exists := os.LookupEnv(key); exists {

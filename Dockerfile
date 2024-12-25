@@ -13,9 +13,6 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o main .
 # Stage 2: Runtime
 FROM alpine:latest
 
-# Set environment variables
-ENV RIE_ENDPOINT=http://localhost:9000/2015-03-31/functions/function/invocations
-
 # Set the working directory
 WORKDIR /app
 
