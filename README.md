@@ -1,23 +1,19 @@
 # AWS Lambda Function URL Emulator
 
-This repository provides a lightweight Docker image to emulate **AWS Lambda Function URLs** locally. It uses **AWS Lambda Runtime Interface Emulator (RIE)** to replicate the behavior of Function URLs for local development and testing.
+A lightweight Docker image to emulate **AWS Lambda Function URLs** locally. It works with [AWS Lambda Runtime Interface Emulator (RIE)](https://github.com/aws/aws-lambda-runtime-interface-emulator/) to replicate the behavior of Function URLs for local development and testing.
 
 ## Features
 
 - Emulates **AWS Lambda Function URLs** locally.
-- Automatically forwards HTTP requests to a locally running Lambda function using the AWS Lambda Runtime Interface Emulator.
+- Automatically forwards HTTP requests to a locally running Lambda function to work with the AWS Lambda Runtime Interface Emulator.
 - Supports `APIGatewayProxyEventV2` for HTTP API requests.
 - Handles `isBase64Encoded` for binary data.
 
 ## Getting Started
 
-### Pull the Docker Image
+### Run with Docker (Standalone)
 
-```bash
-docker pull daido1976/aws-lambda-function-url-emulator:latest
-```
-
-### Run the Emulator
+Please ensure that RIE is running in a separate container beforehand.
 
 ```bash
 docker run --rm -p 8080:8080 \
@@ -25,25 +21,37 @@ docker run --rm -p 8080:8080 \
   daido1976/aws-lambda-function-url-emulator:latest
 ```
 
-The emulator will be available at `http://localhost:8080`.
+The emulator will be available at `http://localhost:8080` and forwards requests to the RIE endpoint.
 
-### Use Docker Compose to work with RIE
+### Run with Docker Compose
 
 For a practical example of integrating this emulator with RIE using Docker Compose, refer to the [example](./example/) directory.
+
+### Run as a CLI Tool (Go)
+
+Install the emulator as a CLI tool:
+
+```bash
+go install github.com/daido1976/aws-lambda-function-url-emulator@latest
+```
+
+Run it with:
+
+```bash
+aws-lambda-function-url-emulator
+```
+
+The emulator will be available at `http://localhost:8080` and forwards requests to the default RIE endpoint. To use a custom endpoint, set the `RIE_ENDPOINT` environment variable:
+
+```bash
+RIE_ENDPOINT=http://custom-host:9000/2015-03-31/functions/function/invocations aws-lambda-function-url-emulator
+```
 
 ## Environment Variables
 
 | Variable       | Description                                         | Default Value                                                     |
 | -------------- | --------------------------------------------------- | ----------------------------------------------------------------- |
 | `RIE_ENDPOINT` | URL for the Lambda Runtime Interface Emulator (RIE) | `http://localhost:9000/2015-03-31/functions/function/invocations` |
-
-## Build the Docker Image Locally
-
-If you want to build the Docker image yourself:
-
-```bash
-docker build -t aws-lambda-function-url-emulator .
-```
 
 ## License
 
