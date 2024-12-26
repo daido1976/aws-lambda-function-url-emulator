@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-lambda-go/events"
 )
@@ -53,12 +54,14 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// See. https://docs.aws.amazon.com/lambda/latest/dg/urls-invocation.html#urls-payloads
 func buildLambdaEvent(r *http.Request) (*events.APIGatewayV2HTTPRequest, error) {
 	bodyBytes, _ := io.ReadAll(r.Body)
 	body := string(bodyBytes)
 
 	return &events.APIGatewayV2HTTPRequest{
 		Version:               "2.0",
+		RouteKey:              "$default",
 		RawPath:               r.URL.Path,
 		RawQueryString:        r.URL.RawQuery,
 		Headers:               joinValuesWithComma(r.Header),
@@ -66,6 +69,11 @@ func buildLambdaEvent(r *http.Request) (*events.APIGatewayV2HTTPRequest, error) 
 		Body:                  body,
 		IsBase64Encoded:       false,
 		RequestContext: events.APIGatewayV2HTTPRequestContext{
+			RouteKey:   "$default",
+			Stage:      "$default",
+			Time:       time.Now().Format("02/Jan/2006:15:04:05 -0700"),
+			TimeEpoch:  time.Now().Unix(),
+			DomainName: r.Host,
 			HTTP: events.APIGatewayV2HTTPRequestContextHTTPDescription{
 				Method:    r.Method,
 				Path:      r.URL.Path,

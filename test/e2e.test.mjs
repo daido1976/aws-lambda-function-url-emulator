@@ -12,7 +12,7 @@ test("E2E Test for GET Request", async () => {
     message: "Hello from Lambda!",
     event: {
       version: "2.0",
-      routeKey: "",
+      routeKey: "$default",
       rawPath: "/foo/bar",
       rawQueryString: "testkey=testvalue",
       headers: expect.objectContaining({
@@ -23,14 +23,12 @@ test("E2E Test for GET Request", async () => {
         testkey: "testvalue",
       },
       requestContext: {
-        routeKey: "",
-        accountId: "",
-        stage: "",
-        requestId: expect.any(String),
-        apiId: "",
-        domainName: "",
-        domainPrefix: "",
-        time: expect.any(String),
+        routeKey: "$default",
+        stage: "$default",
+        domainName: "localhost:8080",
+        time: expect.stringMatching(
+          /^\d{2}\/[A-Za-z]{3}\/\d{4}:\d{2}:\d{2}:\d{2} [-+]\d{4}$/
+        ),
         timeEpoch: expect.any(Number),
         http: expect.objectContaining({
           method: "GET",
@@ -78,7 +76,7 @@ test("E2E Test for POST Request", async () => {
     message: "Hello from Lambda!",
     event: {
       version: "2.0",
-      routeKey: "",
+      routeKey: "$default",
       rawPath: "/foo/bar",
       rawQueryString: "",
       headers: expect.objectContaining({
@@ -88,14 +86,12 @@ test("E2E Test for POST Request", async () => {
         "User-Agent": expect.any(String),
       }),
       requestContext: {
-        routeKey: "",
-        accountId: "",
-        stage: "",
-        requestId: expect.any(String),
-        apiId: "",
-        domainName: "",
-        domainPrefix: "",
-        time: expect.any(String),
+        routeKey: "$default",
+        stage: "$default",
+        domainName: "localhost:8080",
+        time: expect.stringMatching(
+          /^\d{2}\/[A-Za-z]{3}\/\d{4}:\d{2}:\d{2}:\d{2} [-+]\d{4}$/
+        ),
         timeEpoch: expect.any(Number),
         http: expect.objectContaining({
           method: "POST",

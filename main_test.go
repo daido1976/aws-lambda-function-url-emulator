@@ -84,6 +84,10 @@ func TestHandler(t *testing.T) {
 		t.Errorf("expected version to be '2.0', got %v", requestedBodyJSON["version"])
 	}
 
+	if requestedBodyJSON["routeKey"] != "$default" {
+		t.Errorf("expected routeKey to be '$default', got %v", requestedBodyJSON["routeKey"])
+	}
+
 	if requestedBodyJSON["rawPath"] != "/foo/bar" {
 		t.Errorf("expected rawPath to be '/foo/bar', got %v", requestedBodyJSON["rawPath"])
 	}
@@ -114,6 +118,26 @@ func TestHandler(t *testing.T) {
 	}
 
 	requestContext := requestedBodyJSON["requestContext"].(map[string]interface{})
+	if requestContext["routeKey"] != "$default" {
+		t.Errorf("expected routeKey to be '$default', got %v", requestContext["routeKey"])
+	}
+
+	if requestContext["stage"] != "$default" {
+		t.Errorf("expected stage to be '$default', got %v", requestContext["stage"])
+	}
+
+	if _, ok := requestContext["time"].(string); !ok {
+		t.Errorf("expected time to be a string, got %v", requestContext["time"])
+	}
+
+	if _, ok := requestContext["timeEpoch"].(float64); !ok {
+		t.Errorf("expected timeEpoch to be a float64, got %v", requestContext["timeEpoch"])
+	}
+
+	if requestContext["domainName"] != req.Host {
+		t.Errorf("expected domainName to be '%s', got %v", req.Host, requestContext["domainName"])
+	}
+
 	httpContext := requestContext["http"].(map[string]interface{})
 
 	if httpContext["method"] != "POST" {
@@ -131,4 +155,5 @@ func TestHandler(t *testing.T) {
 	if httpContext["userAgent"] != "Go-http-client/1.1" {
 		t.Errorf("expected userAgent to be 'Go-http-client/1.1', got %v", httpContext["userAgent"])
 	}
+
 }
