@@ -21,7 +21,7 @@ docker pull daido1976/aws-lambda-function-url-emulator:latest
 
 ```bash
 docker run --rm -p 8080:8080 \
-  -e RIE_ENDPOINT=http://localhost:8080/2015-03-31/functions/function/invocations \
+  -e RIE_ENDPOINT=http://host.docker.internal:9000/2015-03-31/functions/function/invocations \
   daido1976/aws-lambda-function-url-emulator:latest
 ```
 
@@ -35,7 +35,7 @@ For a practical example of integrating this emulator with RIE using Docker Compo
 
 | Variable       | Description                                         | Default Value                                                     |
 | -------------- | --------------------------------------------------- | ----------------------------------------------------------------- |
-| `RIE_ENDPOINT` | URL for the Lambda Runtime Interface Emulator (RIE) | `http://localhost:8080/2015-03-31/functions/function/invocations` |
+| `RIE_ENDPOINT` | URL for the Lambda Runtime Interface Emulator (RIE) | `http://localhost:9000/2015-03-31/functions/function/invocations` |
 
 ## Build the Docker Image Locally
 
