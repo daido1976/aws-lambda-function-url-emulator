@@ -34,7 +34,6 @@ test("E2E Test for GET Request", async () => {
           method: "GET",
           path: "/foo/bar",
           protocol: "HTTP/1.1",
-          sourceIp: expect.any(String),
           userAgent: expect.any(String),
         }),
         authentication: expect.objectContaining({
@@ -97,7 +96,6 @@ test("E2E Test for POST Request", async () => {
           method: "POST",
           path: "/foo/bar",
           protocol: "HTTP/1.1",
-          sourceIp: expect.any(String),
           userAgent: expect.any(String),
         }),
         authentication: expect.objectContaining({

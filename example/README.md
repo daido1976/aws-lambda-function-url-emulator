@@ -31,7 +31,7 @@ $ curl -s 'http://localhost:8080/foo/bar?testkey=testvalue' | jq .
         "method": "GET",
         "path": "/foo/bar",
         "protocol": "HTTP/1.1",
-        "sourceIp": "...",
+        "sourceIp": "",
         "userAgent": "curl/8.7.1"
       },
       "authentication": {

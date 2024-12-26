@@ -78,7 +78,6 @@ func buildLambdaEvent(r *http.Request) (*events.APIGatewayV2HTTPRequest, error) 
 				Method:    r.Method,
 				Path:      r.URL.Path,
 				Protocol:  r.Proto,
-				SourceIP:  r.RemoteAddr,
 				UserAgent: r.UserAgent(),
 			},
 		},
