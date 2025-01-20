@@ -12,10 +12,15 @@ import (
 	"time"
 
 	"github.com/aws/aws-lambda-go/events"
+	"github.com/rs/cors"
 )
 
 var port = getEnv("PORT", "8080")
 var rieEndpoint = getEnv("RIE_ENDPOINT", "http://localhost:9000/2015-03-31/functions/function/invocations")
+var enableCors = getEnv("ENABLE_CORS", "false")
+
+// It is a global variable for testing.
+var rootHandler http.Handler
 
 func getEnv(key, fallback string) string {
 	if value, exists := os.LookupEnv(key); exists {
@@ -25,12 +30,18 @@ func getEnv(key, fallback string) string {
 }
 
 func main() {
-	http.HandleFunc("/", handler)
+	if enableCors == "true" {
+		rootHandler = cors.Default().Handler(http.HandlerFunc(lambdaUrlProxyHandler))
+		log.Println("[Lambda URL Proxy] CORS enabled")
+	} else {
+		rootHandler = http.HandlerFunc(lambdaUrlProxyHandler)
+	}
+	http.Handle("/", rootHandler)
 	log.Printf("[Lambda URL Proxy] Listening on http://localhost:%s\n", port)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", port), nil))
 }
 
-func handler(w http.ResponseWriter, r *http.Request) {
+func lambdaUrlProxyHandler(w http.ResponseWriter, r *http.Request) {
 	// Log the incoming request
 	log.Printf("[Lambda URL Proxy] %s %s\n", r.Method, r.URL.String())
 
