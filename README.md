@@ -50,10 +50,10 @@ RIE_ENDPOINT=http://custom-host:9000/2015-03-31/functions/function/invocations a
 
 ## Environment Variables
 
-| Variable       | Description                                                                                                                                                  | Default Value                                                     |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------- |
-| `RIE_ENDPOINT` | URL for the Lambda Runtime Interface Emulator (RIE)                                                                                                          | `http://localhost:9000/2015-03-31/functions/function/invocations` |
-| `ENABLE_CORS`  | Set this to `"true"` to enable CORS for all origins, methods, and headers.<br>**Warning:** Please be aware that this options may have security implications. | `"false"`                                                         |
+| Variable       | Description                                                                                                                                                | Default Value                                                     |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| `RIE_ENDPOINT` | URL for the Lambda Runtime Interface Emulator (RIE)                                                                                                        | `http://localhost:9000/2015-03-31/functions/function/invocations` |
+| `ENABLE_CORS`  | Set this to `true` to enable CORS for all origins, methods, and headers.<br>**Warning:** Please be aware that this options may have security implications. | `false`                                                           |
 
 ## License
 
