@@ -31,7 +31,7 @@ func getEnv(key, fallback string) string {
 
 func main() {
 	if enableCors == "true" {
-		rootHandler = cors.Default().Handler(http.HandlerFunc(lambdaUrlProxyHandler))
+		rootHandler = cors.AllowAll().Handler(http.HandlerFunc(lambdaUrlProxyHandler))
 		log.Println("[Lambda URL Proxy] CORS enabled")
 	} else {
 		rootHandler = http.HandlerFunc(lambdaUrlProxyHandler)

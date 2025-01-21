@@ -7,6 +7,8 @@ services:
       - "8080:8080"
     environment:
       RIE_ENDPOINT: "http://test-lambda-rie:8080/2015-03-31/functions/function/invocations"
+      # Uncomment out when testing for CORS.
+      # ENABLE_CORS: "true"
   test-lambda-rie:
     build:
       context: ./lambda
