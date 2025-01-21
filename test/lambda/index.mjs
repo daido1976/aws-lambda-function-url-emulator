@@ -1,5 +1,7 @@
 // @ts-check
 
+import { Buffer } from "node:buffer";
+
 /**
  * @param {import('aws-lambda').APIGatewayProxyEventV2} event
  * @param {import('aws-lambda').Context} context
