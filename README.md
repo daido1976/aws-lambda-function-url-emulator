@@ -8,6 +8,7 @@ A lightweight Docker image to emulate **AWS Lambda Function URLs** locally. It w
 - Automatically forwards HTTP requests to a locally running Lambda function to work with the AWS Lambda Runtime Interface Emulator.
 - Supports `APIGatewayProxyEventV2` for HTTP API requests.
 - Handles `isBase64Encoded` for binary data.
+- Supports enabling CORS via an environment variable, allowing cross-origin requests.
 
 ## Getting Started
 
@@ -49,9 +50,10 @@ RIE_ENDPOINT=http://custom-host:9000/2015-03-31/functions/function/invocations a
 
 ## Environment Variables
 
-| Variable       | Description                                         | Default Value                                                     |
-| -------------- | --------------------------------------------------- | ----------------------------------------------------------------- |
-| `RIE_ENDPOINT` | URL for the Lambda Runtime Interface Emulator (RIE) | `http://localhost:9000/2015-03-31/functions/function/invocations` |
+| Variable       | Description                                                                                                                                                                                                 | Default Value                                                     |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| `RIE_ENDPOINT` | URL for the Lambda Runtime Interface Emulator (RIE)                                                                                                                                                         | `http://localhost:9000/2015-03-31/functions/function/invocations` |
+| `ENABLE_CORS`  | Set this to `"true"` to enable CORS for all origins, methods, and headers.<br>**Warning:** Enabling this setting may have security implications, Ensure you understand the implications before enabling it. | `"false"`                                                         |
 
 ## License
 
