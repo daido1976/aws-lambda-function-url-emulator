@@ -40,9 +40,9 @@ func TestHandler(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(lambdaUrlProxyHandler))
 	defer server.Close()
 
-	req, _ := http.NewRequest("POST", server.URL+"/foo/bar?testkey=testvalue", strings.NewReader("test body"))
+	req, _ := http.NewRequest(http.MethodPost, server.URL+"/foo/bar?testkey=testvalue", strings.NewReader("test body"))
 	req.Header.Set("Custom-Header", "HeaderValue")
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := server.Client().Do(req)
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
